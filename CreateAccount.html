@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<style>
+    body {
+        background-color: rgba(255, 217, 166, 0.23);
+    }
+
+    .Parent {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .LoginBox {
+
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        padding: 20px;
+        text-align: center;
+        width: 40%;
+        max-width: 600px;
+        min-height: 40%;
+        height: auto;
+        border: 2;
+        box-shadow: 15px 15px 15px rgba(134, 134, 220, 0.881);
+        border: 2px double;
+
+    }
+
+    .Heading {
+
+        color: rgb(42, 74, 123);
+
+    }
+
+    .Labls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        height: 100vh;
+        padding: 10px;
+        width: 50%;
+        max-width: 300px;
+        min-height: 12px;
+        height: auto;
+        border: 2;
+        box-shadow: 15px 15px 15px rgba(134, 134, 220, 0.881);
+    }
+input{
+
+    text-align: center;
+    color: blue;
+    padding: 2px;
+}
+
+</style>
+
+<body>
+    <div class="Parent">
+        <div class="LoginBox">
+            <!-- <div class="box">
+                <h2 class="Heading">CreateAccount</h2>
+              Try to make this happen  -->
+            <!-- </div> -->
+            <h2 class="Heading">CreateAccount</h2>
+            <div class="labls">
+               <input type="text" id="username"  placeholder="username">
+
+               <input type="password" id="password"  placeholder="Password">
+                <input type="password" id="Repass"  placeholder=" Re Enter Password">
+                
+            </div>
+            <br>
+            <button type="button" id="btn">SUBMIT</button>
+        </div>
+    </div>
+
+
+    <script src="config.js"></script>
+    <script>
+        const btn=document.getElementById("btn");
+        btn.addEventListener("click",()=>{
+            
+            const username=String(document.getElementById("username").value);
+            const password=String(document.getElementById("password").value);
+            const Repass=String(document.getElementById("Repass").value);
+            if (password!=Repass){
+                alert("You havent Entred the correct Password");
+                
+            
+            }
+        })
+        // const userdata={
+        //     "username":username,
+        //     "password":password
+        // }
+        // const response=await fetch(`{CONFIG.BACKENDURL}/Register`){
+
+        //     JSON.stringify(userData)
+            
+        // }
+        const userData = {
+        username: username,
+        password: password
+    };
+        
+        try {
+        const response = await fetch("http://127.0.0.1:5000/register", { // Replace with your actual backend URL
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json" // Tells the server we are sending JSON
+            },
+            body: JSON.stringify(userData) // Converts the JS object to a JSON string
+        });
+
+        // 4. Handle the server's response
+        if (response.ok) {
+            const data = await response.json();
+            console.log("Success:", data);
+            alert("Registration successful!");
+            // You might want to redirect the user here using window.location.href
+        } else {
+            console.error("Server error:", response.status);
+            alert("Registration failed. Please try again.");
+        }
+        
+    } catch (error) {
+        // This catches network errors (e.g., if your backend isn't running)
+        console.error("Network error:", error);
+        alert("Could not connect to the server.");
+    }
+
+
+
+    </script>
+</body>tml>
