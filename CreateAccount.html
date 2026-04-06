@@ -55,13 +55,13 @@
         border: 2;
         box-shadow: 15px 15px 15px rgba(134, 134, 220, 0.881);
     }
-input{
 
-    text-align: center;
-    color: blue;
-    padding: 2px;
-}
+    input {
 
+        text-align: center;
+        color: blue;
+        padding: 2px;
+    }
 </style>
 
 <body>
@@ -73,11 +73,11 @@ input{
             <!-- </div> -->
             <h2 class="Heading">CreateAccount</h2>
             <div class="labls">
-               <input type="text" id="username"  placeholder="username">
+                <input type="text" id="username" placeholder="username" required>
 
-               <input type="password" id="password"  placeholder="Password">
-                <input type="password" id="Repass"  placeholder=" Re Enter Password">
-                
+                <input type="password" id="password" placeholder="Password" required>
+                <input type="password" id="Repass" placeholder=" Re Enter Password" required>
+
             </div>
             <br>
             <button type="button" id="btn">SUBMIT</button>
@@ -87,59 +87,55 @@ input{
 
     <script src="config.js"></script>
     <script>
-        const btn=document.getElementById("btn");
-        btn.addEventListener("click",()=>{
-            
-            const username=String(document.getElementById("username").value);
-            const password=String(document.getElementById("password").value);
-            const Repass=String(document.getElementById("Repass").value);
-            if (password!=Repass){
-                alert("You havent Entred the correct Password");
-                
-            
-            }
-        })
-        // const userdata={
-        //     "username":username,
-        //     "password":password
-        // }
-        // const response=await fetch(`{CONFIG.BACKENDURL}/Register`){
+        const btn = document.getElementById("btn");
 
-        //     JSON.stringify(userData)
-            
-        // }
-        const userData = {
-        username: username,
-        password: password
-    };
-        
-        try {
-        const response = await fetch("http://127.0.0.1:5000/register", { // Replace with your actual backend URL
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json" // Tells the server we are sending JSON
-            },
-            body: JSON.stringify(userData) // Converts the JS object to a JSON string
+
+        btn.addEventListener("click", async () => {
+
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const Repass = document.getElementById("Repass").value;
+
+            // if (!password || !Repass || !username) {
+            //     alert("You Havent Entered All the Fields!!");
+            //     return;
+            // }
+            // if (password !== Repass) {
+            //     alert("You haven't entered the correct Password");
+            //     return;
+            // }
+            // if (password.length < 8) {
+            //     alert("The password Lenght shoudl be 8 characters long");
+            //     return;
+            // }
+
+            const userData = {
+                "username": username,
+                "password": password
+            };
+            URL = CONFIG["BACKENDURL"]
+           
+            try {
+              const Response=await   fetch(`${URL}/Register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                const Data= await Response.json()
+                console.log(Data)
+
+
+            } catch (error) {
+                console.log(error);
+            }
+         
+
         });
 
-        // 4. Handle the server's response
-        if (response.ok) {
-            const data = await response.json();
-            console.log("Success:", data);
-            alert("Registration successful!");
-            // You might want to redirect the user here using window.location.href
-        } else {
-            console.error("Server error:", response.status);
-            alert("Registration failed. Please try again.");
-        }
-        
-    } catch (error) {
-        // This catches network errors (e.g., if your backend isn't running)
-        console.error("Network error:", error);
-        alert("Could not connect to the server.");
-    }
-
-
-
     </script>
-</body>tml>
+</body>
+
+</html>
