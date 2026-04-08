@@ -81,6 +81,8 @@
             </div>
             <br>
             <button type="button" id="btn">SUBMIT</button>
+            <button type="button" id="redit">Already Have a accounr</button>
+
         </div>
     </div>
 
@@ -94,10 +96,11 @@
         //     window.location.href = CONFIG["Redirect"];
 
         // }
-        // CheckifAlreadyExist();
-
+        CheckifAlreadyExist();
+        const Redirect = document.getElementById("redit");
 
         const btn = document.getElementById("btn");
+
         btn.addEventListener("click", async () => {
 
 
@@ -155,16 +158,21 @@
                 document.cookie = `Userid=${id}; ${expiry}; ${path}; ${sameSite}`;
                 document.cookie = `username=${username}; ${expiry}; ${path}; ${sameSite}`;
                 // console.log(decodeURIComponent(document.cookie))
-
+                window.location.replace(CONFIG["LOGIN"])
 
 
             } catch (error) {
                 console.log(error);
             }
+            Redirect.addEventListener("click", () => {
 
+                window.location.replace(CONFIG["LOGIN"])
+
+
+            });
 
         });
-// console.log(getCookie("Userid"))
+        // console.log(getCookie("Userid"))
     </script>
 </body>
 
