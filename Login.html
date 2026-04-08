@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<style>
+    body {
+        background-image: linear-gradient(to left, lightyellow, aqua);
+    }
+
+    .Innerbox {
+
+        border-style: double;
+        padding: 0dvb;
+
+    }
+</style>
+
+
+<body>
+    <div "class=" Innerbox">
+
+        Hello
+
+
+
+
+
+    </div>
+    <!-- Inner boc -->
+
+</body>
+<script src="Utils.js"></script>
+<script src="config.js"></script>
+<script>
+            CheckifAlreadyExist();
+
+const btn = document.getElementById("login");
+const cracc=document.getElementById("cracc");
+    btn.addEventListener("click", async () => {
+
+        const username = document.getElementById("username")
+        const password = document.getElementById("password")
+
+        if (!password || !username) {
+
+            alert("Please Entre the username and password");
+        }
+        if (password.length < 8) {
+            alert("Password Length should be 8 characters long!!!");
+        }
+        const userData = {
+            "username": username,
+            "password": password
+        }
+
+        URL = CONFIG["BACKENDURL"];
+
+        try {
+            const Response = await fetch(`${URL}/Login`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/JSON'
+                },
+                body: JSON.stringify(userData)
+
+            });
+            const Data = Response.json()
+            if (Response.status === 400) {
+
+                alert(`The Error is :${Data["Report"]}`);
+                return;
+            }
+            alert("You have been Loged in ");
+            const id = Data["Userid"]
+            const expiry = `expires=${60 * 60 * 24 * 365 * 3} ;`
+            const path = "path=/";
+            const sameSite = "SameSite=Lax";
+
+            localStorage.setItem("Userid", id);
+            localStorage.setItem("username", username)
+            document.cookie = `Userid=${id}; ${expiry}; ${path}; ${sameSite}`;
+            document.cookie = `username=${username}; ${expiry}; ${path}; ${sameSite}`;
+            window.location.replace(CONFIG["MAIN"])  
+
+
+        }
+        catch (error) {
+            console.log(error)
+
+        }
+        cracc.addEventListener("click",()=>{
+
+            window.location.href(CONFIG["REGISTER"])
+
+
+        })
+        
+
+
+
+    });
+
+</script>
+
+</html>
