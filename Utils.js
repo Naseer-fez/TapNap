@@ -23,8 +23,13 @@ function setCookie(name, value, days) {
 }
 
 function saveSession(userId, username) {
-  localStorage.setItem('Userid', userId);
-  localStorage.setItem('username', username);
+  /* Guard: never store undefined/null — it would break session checks */
+  if (!userId || String(userId) === 'undefined' || String(userId) === 'null') {
+    console.error('saveSession: invalid userId', userId);
+    return;
+  }
+  localStorage.setItem('Userid', String(userId));
+  localStorage.setItem('username', String(username || 'User'));
 
   // will only run if allowed
   setCookie('Userid', userId);

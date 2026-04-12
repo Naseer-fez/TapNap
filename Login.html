@@ -84,7 +84,16 @@
 
       if (!result.ok) { showToast(result.data.Report || ('Error ' + result.status)); return; }
 
-      saveSession(result.data.Userid, username);
+      /* Try multiple possible key names for the user ID */
+      console.log('Login response:', JSON.stringify(result.data));
+      var userId = result.data.Userid || result.data.userid || result.data.user_id 
+                || result.data.id || result.data.ID || result.data.UserId;
+      if (!userId) {
+        showToast('Login succeeded but no user ID returned. Check console.', 'error');
+        console.error('Could not find user ID in response:', result.data);
+        return;
+      }
+      saveSession(userId, username);
       showToast('Signed in!', 'success');
       setTimeout(function() { window.location.replace(CONFIG.ROUTES.MAIN); }, 700);
     });

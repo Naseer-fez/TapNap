@@ -12,13 +12,13 @@
 
   <header class="site-header">
     <div class="header__left">
-      <span class="header__tagline">Link Manager</span>
+      <span class="header__tagline" id="header-tagline">Link Manager</span>
     </div>
 
     <nav class="header__nav">
       <a href="#" class="nav-link" id="nav-login">Sign In</a>
       <a href="#" class="nav-link nav-link--accent" id="nav-register">Register</a>
-      <a href="#" class="nav-link" id="nav-logout" style="display:none">Logout</a>
+      <a href="#" class="nav-link nav-link--logout" id="nav-logout" style="display:none">Logout</a>
     </nav>
 
     <a href="/" class="logo-corner" style="margin-left:.75rem">
@@ -187,32 +187,48 @@
     });
     document.getElementById('nav-register').addEventListener('click', function(e) {
       e.preventDefault();
-      var session = getSession();
-      if (session.userId) {
-        /* Already logged in — could go to a dashboard; for now reload main */
-        window.location.href = CONFIG.ROUTES.MAIN;
-      } else {
-        window.location.href = CONFIG.ROUTES.REGISTER;
-      }
+      window.location.href = CONFIG.ROUTES.REGISTER;
     });
 
     /* ── Update nav based on login state ── */
-    (function() {
-      var session = getSession();
-      console.log('Session debug:', session, 'localStorage Userid:', localStorage.getItem('Userid'));
-      if (session.userId && session.userId !== 'undefined') {
-        document.getElementById('nav-login').style.display = 'none';
-        document.getElementById('nav-register').style.display = 'none';
-        document.getElementById('nav-logout').style.display = '';
+    function isValidSession(session) {
+      return session.userId
+        && String(session.userId) !== 'undefined'
+        && String(session.userId) !== 'null'
+        && String(session.userId).trim() !== '';
+    }
+
+    function updateNavUI() {
+      var session  = getSession();
+      var loggedIn = isValidSession(session);
+
+      var loginEl    = document.getElementById('nav-login');
+      var registerEl = document.getElementById('nav-register');
+      var logoutEl   = document.getElementById('nav-logout');
+      var taglineEl  = document.getElementById('header-tagline');
+
+      if (loggedIn) {
+        loginEl.style.display    = 'none';
+        registerEl.style.display = 'none';
+        logoutEl.style.display   = '';
         var name = session.username || 'User';
-        document.querySelector('.header__tagline').textContent = 'Hi, ' + name;
+        taglineEl.textContent = 'Hi, ' + name + ' 👋';
+        taglineEl.classList.add('header__tagline--greeting');
+      } else {
+        loginEl.style.display    = '';
+        registerEl.style.display = '';
+        logoutEl.style.display   = 'none';
+        taglineEl.textContent = 'Link Manager';
+        taglineEl.classList.remove('header__tagline--greeting');
       }
-    })();
+    }
+    updateNavUI();
 
     /* ── Logout ── */
     document.getElementById('nav-logout').addEventListener('click', function(e) {
       e.preventDefault();
       clearSession();
+      updateNavUI();
       showToast('Signed out.', 'success');
       setTimeout(function() { window.location.href = CONFIG.ROUTES.LOGIN; }, 800);
     });
