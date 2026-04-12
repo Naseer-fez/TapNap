@@ -2,4 +2,4 @@ test.html
 AI/
 .gi
 Template/
-config.js
+# config.js is intentionally tracked (no secrets — only public URLs)
