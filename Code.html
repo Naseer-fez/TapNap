@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TapNap — Retrieve Link</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+  <!-- Logo — top-right on every page -->
+  <a href="/" class="logo-corner">
+    <img src="TCP.png" alt="TapNap Logo">
+    <span class="logo-corner__name">TapNap</span>
+  </a>
+
+  <!-- ══ STEP 1 — Enter code ══ -->
+  <main class="page" id="view-enter">
+    <div class="card">
+      <p class="card__eyebrow">Code Lookup</p>
+      <h1 class="card__title">Retrieve a link.</h1>
+      <p class="card__sub">
+        Enter the numeric code associated with your link.
+        A password may be required depending on how it was created.
+      </p>
+
+      <div class="field">
+        <label for="code-input">Code Number</label>
+        <input
+          id="code-input"
+          type="number"
+          placeholder="e.g. 1234"
+          min="0"
+          inputmode="numeric"
+          autocomplete="off"
+          autofocus
+        >
+      </div>
+
+      <button class="btn btn--primary" id="btn-next">Continue →</button>
+      <button class="btn btn--ghost"   id="btn-home">← Back to Home</button>
+    </div>
+  </main>
+
+  <!-- ══ MODAL — Password prompt ══ -->
+  <div class="modal-overlay" id="modal-password" role="dialog" aria-modal="true" aria-labelledby="modal-pass-title">
+    <div class="modal">
+      <button class="modal__close" onclick="closeModal('modal-password')" aria-label="Close">✕</button>
+
+      <h3 class="modal__title" id="modal-pass-title">Enter Password</h3>
+      <p class="modal__sub">
+        This link <em>may</em> be password-protected.
+        Leave blank to try without one — or enter the password below.
+      </p>
+
+      <!-- Two-column: description on left, password input on right -->
+      <div style="display:flex;gap:.75rem;align-items:flex-end;margin-bottom:.75rem">
+        <div style="flex:1">
+          <div style="
+            background:var(--surface-2);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            padding:.75rem 1rem;
+            font-size:.82rem;
+            color:var(--muted);
+            line-height:1.5;
+          ">
+            You can submit <strong style="color:var(--text)">without</strong> a password if
+            the link isn't protected. Enter at least one character to switch to
+            password mode.
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="field" style="margin-bottom:0">
+            <label for="modal-pass-input">Password</label>
+            <input
+              id="modal-pass-input"
+              type="password"
+              placeholder="Optional…"
+              autocomplete="off"
+            >
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn--primary" id="btn-pass-submit">Fetch Without Password</button>
+      <button class="btn btn--ghost"   onclick="closeModal('modal-password')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ══ MODAL — Link result ══ -->
+  <div class="modal-overlay" id="modal-result" role="dialog" aria-modal="true" aria-labelledby="modal-result-title">
+    <div class="modal">
+      <button class="modal__close" onclick="closeModal('modal-result')" aria-label="Close">✕</button>
+
+      <h3 class="modal__title" id="modal-result-title">Link Found</h3>
+      <p class="modal__sub">Your link is ready. Copy or open it below.</p>
+
+      <div class="link-box">
+        <span class="link-box__url" id="result-url">—</span>
+        <button class="link-box__copy" id="btn-copy">Copy</button>
+        <a class="link-box__copy" id="btn-go" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration:none;background:var(--accent);color:var(--bg);">Go ↗</a>
+      </div>
+
+      <a
+        class="btn btn--primary"
+        id="result-open"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Open Link ↗</a>
+
+      <button class="btn btn--ghost" onclick="handleNewLookup()">Look Up Another</button>
+    </div>
+  </div>
+
+  <!-- ══ MODAL — Error detail ══ -->
+  <div class="modal-overlay" id="modal-error" role="dialog" aria-modal="true">
+    <div class="modal" style="max-width:400px;text-align:center">
+      <button class="modal__close" onclick="closeModal('modal-error')" aria-label="Close">✕</button>
+      <div style="font-size:2.5rem;margin-bottom:1rem">⚠️</div>
+      <h3 style="font-family:var(--font-head);font-size:1.4rem;color:var(--danger);margin-bottom:.4rem">
+        Not Found
+      </h3>
+      <p class="modal__sub" id="error-detail">
+        The code or password was incorrect. Please try again.
+      </p>
+      <button class="btn btn--primary" onclick="handleNewLookup()">Try Again</button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script>
+    /* ── State ── */
+    var pendingCode = null;
+
+    /* ── Navigation ── */
+    document.getElementById('btn-home').addEventListener('click', function() {
+      window.location.href = CONFIG.ROUTES.MAIN;
+    });
+
+    /* ── Step 1: user clicks Continue ── */
+    document.getElementById('btn-next').addEventListener('click', function() {
+      var val = document.getElementById('code-input').value.trim();
+      if (!val)           { showToast('Please enter a code number.'); return; }
+      if (isNaN(Number(val))) { showToast('Code must be a number.'); return; }
+
+      pendingCode = val;
+
+      /* Reset password modal state */
+      document.getElementById('modal-pass-input').value = '';
+      updatePassBtn();
+      openModal('modal-password');
+    });
+
+    /* Enter key on code input */
+    document.getElementById('code-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('btn-next').click();
+    });
+
+    /* ── Password button label updates based on input ── */
+    function updatePassBtn() {
+      var val = document.getElementById('modal-pass-input').value;
+      var btn = document.getElementById('btn-pass-submit');
+      btn.textContent = val.length > 0 ? 'Fetch With Password' : 'Fetch Without Password';
+    }
+    document.getElementById('modal-pass-input').addEventListener('input', updatePassBtn);
+
+    /* Enter key in password field also submits */
+    document.getElementById('modal-pass-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('btn-pass-submit').click();
+    });
+
+    /* ── Step 2: fetch the link ── */
+    document.getElementById('btn-pass-submit').addEventListener('click', async function() {
+      var password = document.getElementById('modal-pass-input').value.trim();
+      var btn      = document.getElementById('btn-pass-submit');
+
+      setLoading(btn, true);
+
+      /* Build URL: /Code/<code> or /Code/<code>/<password> */
+      var url    = CONFIG.API.CODE(pendingCode, password || null);
+      var result = await apiFetch(url, { method: 'GET' });
+
+      setLoading(btn, false);
+
+      if (!result.ok) {
+        /* Show error in error modal */
+        var msg = result.data.Report || result.data.message || ('Error ' + result.status);
+        closeModal('modal-password');
+        document.getElementById('error-detail').textContent = msg;
+        openModal('modal-error');
+        return;
+      }
+
+      /* Extract link from backend response */
+      var link = result.data.LINK || result.data.Link || result.data.link || result.data.url || '';
+      if (!link) {
+        closeModal('modal-password');
+        document.getElementById('error-detail').textContent =
+          'Received a response but no link was found. Please contact support.';
+        openModal('modal-error');
+        return;
+      }
+
+      /* Show result */
+      closeModal('modal-password');
+
+      document.getElementById('result-url').textContent = link;
+      document.getElementById('result-open').href       = link;
+      document.getElementById('btn-go').href            = link;
+      openModal('modal-result');
+    });
+
+    /* ── Copy button ── */
+    document.getElementById('btn-copy').addEventListener('click', function() {
+      var url = document.getElementById('result-url').textContent;
+      copyToClipboard(url, this);
+    });
+
+    /* ── Reset for another lookup ── */
+    function handleNewLookup() {
+      closeModal('modal-result');
+      closeModal('modal-error');
+      pendingCode = null;
+      document.getElementById('code-input').value = '';
+      document.getElementById('code-input').focus();
+    }
+
+    /* ── Auto-fill code from URL param (e.g. Code.html?code=1234) ── */
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var c = params.get('code');
+      if (c) {
+        document.getElementById('code-input').value = c;
+        /* Auto-trigger lookup */
+        setTimeout(function() {
+          document.getElementById('btn-next').click();
+        }, 400);
+      }
+    })();
+  </script>
+</body>
+</html>

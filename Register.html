@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TapNap — Create Account</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+  <!-- Logo — top-right on every page -->
+  <a href="/" class="logo-corner">
+    <img src="TCP.png" alt="TapNap Logo">
+    <span class="logo-corner__name">TapNap</span>
+  </a>
+
+  <main class="page">
+    <div class="card">
+      <p class="card__eyebrow">Get started</p>
+      <h1 class="card__title">Create account.</h1>
+      <p class="card__sub">Join TapNap — it only takes a moment.</p>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          placeholder="your_username"
+          autocomplete="username"
+          autofocus
+        >
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Min. 8 characters"
+          autocomplete="new-password"
+        >
+      </div>
+
+      <div class="field">
+        <label for="repass">Confirm Password</label>
+        <input
+          id="repass"
+          type="password"
+          placeholder="Repeat password"
+          autocomplete="new-password"
+        >
+      </div>
+
+      <button class="btn btn--primary" id="btn-submit">Create Account</button>
+
+      <div class="divider">already have an account?</div>
+
+      <button class="btn btn--ghost" id="btn-login">Sign in instead</button>
+      <button class="btn btn--ghost" id="btn-forgot">Forgot password?</button>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script>
+    checkIfAlreadyLoggedIn();
+
+    document.getElementById('btn-login').addEventListener('click', function() {
+      window.location.href = CONFIG.ROUTES.LOGIN;
+    });
+    document.getElementById('btn-forgot').addEventListener('click', function() {
+      window.location.href = CONFIG.ROUTES.FORGOT;
+    });
+
+    /* Enter key on last field submits */
+    document.getElementById('repass').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('btn-submit').click();
+    });
+
+    document.getElementById('btn-submit').addEventListener('click', async function() {
+      var username = document.getElementById('username').value.trim();
+      var email    = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      var repass   = document.getElementById('repass').value;
+      var btn      = document.getElementById('btn-submit');
+
+      if (!username || !email || !password || !repass) { showToast('Please fill in all fields.'); return; }
+      if (!isValidEmail(email))   { showToast('Please enter a valid email address.'); return; }
+      if (password.length < 8)    { showToast('Password must be at least 8 characters.'); return; }
+      if (password !== repass)    { showToast('Passwords do not match.'); return; }
+
+      setLoading(btn, true);
+      var result = await apiFetch(CONFIG.API.REGISTER, {
+        method: 'POST',
+        body:   JSON.stringify({ username: username, email: email, password: password }),
+      });
+      setLoading(btn, false);
+
+      if (!result.ok) { showToast(result.data.Report || ('Error ' + result.status)); return; }
+
+      saveSession(result.data.Userid, username);
+      showToast('Account created!', 'success');
+      setTimeout(function() { window.location.replace(CONFIG.ROUTES.LOGIN); }, 900);
+    });
+  </script>
+</body>
+</html>

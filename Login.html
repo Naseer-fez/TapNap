@@ -1,109 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TapNap — Sign In</title>
+  <link rel="stylesheet" href="main.css">
 </head>
-<style>
-    body {
-        background-image: linear-gradient(to left, lightyellow, aqua);
-    }
-
-    .Innerbox {
-
-        border-style: double;
-        padding: 0dvb;
-
-    }
-</style>
-
-
 <body>
-    <div "class=" Innerbox">
 
-        Hello
+  <!-- Logo — top-right on every page -->
+  <a href="/" class="logo-corner">
+    <img src="TCP.png" alt="TapNap Logo">
+    <span class="logo-corner__name">TapNap</span>
+  </a>
 
+  <main class="page">
+    <div class="card">
+      <p class="card__eyebrow">Welcome back</p>
+      <h1 class="card__title">Sign in.</h1>
+      <p class="card__sub">Access your link management dashboard.</p>
 
+      <div class="field">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          placeholder="your_username"
+          autocomplete="username"
+          autofocus
+        >
+      </div>
 
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+        >
+      </div>
 
+      <button class="btn btn--primary" id="btn-login">Sign In</button>
 
+      <div class="divider">or</div>
+
+      <button class="btn btn--ghost" id="btn-register">Create an account</button>
+      <button class="btn btn--ghost" id="btn-forgot">Forgot password?</button>
     </div>
-    <!-- Inner boc -->
+  </main>
 
-</body>
-<script src="Utils.js"></script>
-<script src="config.js"></script>
-<script>
-            CheckifAlreadyExist();
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script>
+    checkIfAlreadyLoggedIn();
 
-const btn = document.getElementById("login");
-const cracc=document.getElementById("cracc");
-    btn.addEventListener("click", async () => {
-
-        const username = document.getElementById("username")
-        const password = document.getElementById("password")
-
-        if (!password || !username) {
-
-            alert("Please Entre the username and password");
-        }
-        if (password.length < 8) {
-            alert("Password Length should be 8 characters long!!!");
-        }
-        const userData = {
-            "username": username,
-            "password": password
-        }
-
-        URL = CONFIG["BACKENDURL"];
-
-        try {
-            const Response = await fetch(`${URL}/Login`, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/JSON'
-                },
-                body: JSON.stringify(userData)
-
-            });
-            const Data = Response.json()
-            if (Response.status === 400) {
-
-                alert(`The Error is :${Data["Report"]}`);
-                return;
-            }
-            alert("You have been Loged in ");
-            const id = Data["Userid"]
-            const expiry = `expires=${60 * 60 * 24 * 365 * 3} ;`
-            const path = "path=/";
-            const sameSite = "SameSite=Lax";
-
-            localStorage.setItem("Userid", id);
-            localStorage.setItem("username", username)
-            document.cookie = `Userid=${id}; ${expiry}; ${path}; ${sameSite}`;
-            document.cookie = `username=${username}; ${expiry}; ${path}; ${sameSite}`;
-            window.location.replace(CONFIG["MAIN"])  
-
-
-        }
-        catch (error) {
-            console.log(error)
-
-        }
-        cracc.addEventListener("click",()=>{
-
-            window.location.href(CONFIG["REGISTER"])
-
-
-        })
-        
-
-
-
+    document.getElementById('btn-register').addEventListener('click', function() {
+      window.location.href = CONFIG.ROUTES.REGISTER;
+    });
+    document.getElementById('btn-forgot').addEventListener('click', function() {
+      window.location.href = CONFIG.ROUTES.FORGOT;
     });
 
-</script>
+    /* Enter key submits */
+    document.getElementById('password').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
 
+    document.getElementById('btn-login').addEventListener('click', async function() {
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      var btn      = document.getElementById('btn-login');
+
+      if (!username || !password) { showToast('Please enter username and password.'); return; }
+      if (password.length < 8)   { showToast('Password must be at least 8 characters.'); return; }
+
+      setLoading(btn, true);
+      var result = await apiFetch(CONFIG.API.LOGIN, {
+        method: 'POST',
+        body:   JSON.stringify({ username: username, password: password }),
+      });
+      setLoading(btn, false);
+
+      if (!result.ok) { showToast(result.data.Report || ('Error ' + result.status)); return; }
+
+      saveSession(result.data.Userid, username);
+      showToast('Signed in!', 'success');
+      setTimeout(function() { window.location.replace(CONFIG.ROUTES.MAIN); }, 700);
+    });
+  </script>
+</body>
 </html>

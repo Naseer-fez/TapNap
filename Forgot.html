@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TapNap — Reset Password</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+  <!-- Logo — top-right on every page -->
+  <a href="/" class="logo-corner">
+    <img src="TCP.png" alt="TapNap Logo">
+    <span class="logo-corner__name">TapNap</span>
+  </a>
+
+  <main class="page">
+    <div class="card">
+      <p class="card__eyebrow">Account Recovery</p>
+      <h1 class="card__title">Reset password.</h1>
+      <p class="card__sub">
+        Enter your registered email address and we'll send you a one-time code.
+      </p>
+
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          autofocus
+        >
+      </div>
+
+      <button class="btn btn--primary" id="btn-submit">Send Reset Code</button>
+      <button class="btn btn--ghost"   id="btn-back">← Back to Sign In</button>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script>
+    document.getElementById('btn-back').addEventListener('click', function() {
+      window.location.href = CONFIG.ROUTES.LOGIN;
+    });
+
+    /* Enter key submits */
+    document.getElementById('email').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('btn-submit').click();
+    });
+
+    document.getElementById('btn-submit').addEventListener('click', async function() {
+      var email = document.getElementById('email').value.trim();
+      var btn   = document.getElementById('btn-submit');
+
+      if (!email)               { showToast('Please enter your email address.'); return; }
+      if (!isValidEmail(email)) { showToast('Please enter a valid email address.'); return; }
+
+      setLoading(btn, true);
+      var result = await apiFetch(CONFIG.API.FORGOT(email), { method: 'POST' });
+      setLoading(btn, false);
+
+      if (!result.ok) { showToast(result.data.Report || ('Error ' + result.status)); return; }
+
+      showToast('Code sent! Check your inbox.', 'success');
+      setTimeout(function() {
+        window.location.href = CONFIG.ROUTES.CODE_OTP + '?message=' + encodeURIComponent(email);
+      }, 800);
+    });
+  </script>
+</body>
+</html>

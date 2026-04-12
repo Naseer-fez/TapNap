@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TapNap — Link Manager</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="header__left">
+      <span class="header__tagline">Link Manager</span>
+    </div>
+
+    <nav class="header__nav">
+      <a href="#" class="nav-link" id="nav-login">Sign In</a>
+      <a href="#" class="nav-link nav-link--accent" id="nav-register">Register</a>
+      <a href="#" class="nav-link" id="nav-logout" style="display:none">Logout</a>
+    </nav>
+
+    <a href="/" class="logo-corner" style="margin-left:.75rem">
+      <img src="TCP.png" alt="TapNap Logo" style="width: 36px; height: 36px; border-radius: 8px;">
+      <span class="logo-corner__name">TapNap</span>
+    </a>
+  </header>
+
+  <main>
+
+    <section class="panel panel--left">
+      <div class="panel__inner">
+
+        <div class="retrieve-hero">
+          <span class="retrieve-hero__icon">🔗</span>
+          <h2 class="retrieve-hero__title">Already have a code?</h2>
+          <p class="retrieve-hero__desc">
+            Enter your numeric code below to retrieve the link.
+            Password protection is optional — leave it blank if not required.
+          </p>
+        </div>
+
+        <div class="code-lookup">
+          <input type="number" id="lookup-code" placeholder="Enter code…" min="0" inputmode="numeric" aria-label="Code">
+          <button class="code-lookup__btn" id="btn-lookup">Fetch →</button>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="panel-divider" role="separator" aria-hidden="true"></div>
+
+    <section class="panel panel--right">
+      <div class="panel__inner">
+
+        <p class="panel__eyebrow">
+          <span class="panel__eyebrow-dot"></span>
+          New Link
+        </p>
+        <h2 class="panel__heading">Create a <em>code.</em></h2>
+        <p class="panel__desc">
+          Associate a numeric code with any link.
+          Optionally protect it with a password.
+        </p>
+
+        <div class="field">
+          <label for="code">Code <span style="color:var(--muted);font-weight:400">(number)</span></label>
+          <input id="code" type="number" placeholder="e.g. 1234" min="0" inputmode="numeric">
+        </div>
+
+        <div class="field">
+          <label for="link">Destination URL</label>
+          <input id="link" type="url" placeholder="https://example.com/your-link" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="password">
+            Password
+            <span style="color:var(--muted);font-weight:400;margin-left:.3rem">(optional)</span>
+          </label>
+          <input id="password" type="password" placeholder="Leave blank for no protection" autocomplete="new-password">
+        </div>
+
+        <button class="btn btn--primary" id="btn-create">Create Code</button>
+
+      </div>
+    </section>
+
+  </main>
+
+  <div class="modal-overlay" id="modal-password" role="dialog" aria-modal="true" aria-labelledby="modal-pass-title">
+    <div class="modal">
+      <button class="modal__close" onclick="closeModal('modal-password')" aria-label="Close">✕</button>
+
+      <h3 class="modal__title" id="modal-pass-title"
+        style="font-family:var(--font-head);font-size:1.4rem;margin-bottom:.35rem">
+        Protected Link
+      </h3>
+      <p style="font-size:.875rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.5">
+        This link <em>may</em> require a password.
+        You can submit without one — or enter it below.
+      </p>
+
+      <div class="pass-row">
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label for="modal-pass-input">Password</label>
+          <input id="modal-pass-input" type="password" placeholder="Optional password" autocomplete="off">
+        </div>
+      </div>
+      <p class="pass-row__hint">
+        Leave blank to fetch without a password.
+        If one digit or more is entered, you must submit with it.
+      </p>
+
+      <button class="btn btn--primary" id="btn-pass-submit" style="margin-top:1.2rem">
+        Fetch Without Password
+      </button>
+      <button class="btn btn--ghost" onclick="closeModal('modal-password')">Cancel</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-result" role="dialog" aria-modal="true" aria-labelledby="modal-result-title">
+    <div class="modal">
+      <button class="modal__close" onclick="closeModal('modal-result')" aria-label="Close">✕</button>
+
+      <h3 class="modal__title" id="modal-result-title"
+        style="font-family:var(--font-head);font-size:1.4rem;margin-bottom:.35rem">
+        Link Retrieved
+      </h3>
+      <p style="font-size:.875rem;color:var(--muted);margin-bottom:1.25rem">
+        Your link is ready. Copy it or open it directly.
+      </p>
+
+      <div class="link-box">
+        <span class="link-box__url" id="result-url">—</span>
+        <button class="link-box__copy" id="btn-copy">Copy</button>
+      </div>
+
+      <a class="btn btn--primary" id="result-open" href="#" target="_blank" rel="noopener noreferrer"
+        style="margin-top:.25rem">
+        Open Link ↗
+      </a>
+      <button class="btn btn--ghost" onclick="closeModal('modal-result')">Close</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-created" role="dialog" aria-modal="true">
+    <div class="modal" style="max-width:400px;text-align:center">
+      <button class="modal__close" onclick="closeModal('modal-created')" aria-label="Close">✕</button>
+      <div style="font-size:2.5rem;margin-bottom:1rem">✅</div>
+      <h3 style="font-family:var(--font-head);font-size:1.4rem;color:var(--text);margin-bottom:.4rem">
+        Code Created!
+      </h3>
+      <p style="font-size:.875rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.5">
+        Your code has been created successfully.
+        Anyone with the code can retrieve the link.
+      </p>
+      <button class="btn btn--primary" onclick="closeModal('modal-created')">Done</button>
+    </div>
+  </div>
+
+  <div class="cookie-banner" id="cookie-banner">
+    <div class="cookie-banner__content">
+      <h4 style="font-family:var(--font-head); font-size:1.15rem; margin-bottom:0.35rem; color:var(--text);">We use
+        cookies</h4>
+      <p style="font-size:0.8rem; color:var(--muted); line-height:1.45;">
+        We use cookies to improve your experience and analyze site traffic. By continuing, you agree to our use of
+        cookies.
+      </p>
+    </div>
+    <div class="cookie-banner__actions">
+      <button class="btn btn--primary" id="btn-accept-cookies">Accept</button>
+      <button class="btn btn--ghost" id="btn-decline-cookies">Decline</button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script>
+    var pendingLookupCode = null;
+
+    /* ── Nav link wiring ── */
+    document.getElementById('nav-login').addEventListener('click', function(e) {
+      e.preventDefault();
+      window.location.href = CONFIG.ROUTES.LOGIN;
+    });
+    document.getElementById('nav-register').addEventListener('click', function(e) {
+      e.preventDefault();
+      var session = getSession();
+      if (session.userId) {
+        /* Already logged in — could go to a dashboard; for now reload main */
+        window.location.href = CONFIG.ROUTES.MAIN;
+      } else {
+        window.location.href = CONFIG.ROUTES.REGISTER;
+      }
+    });
+
+    /* ── Update nav based on login state ── */
+    (function() {
+      var session = getSession();
+      console.log('Session debug:', session, 'localStorage Userid:', localStorage.getItem('Userid'));
+      if (session.userId && session.userId !== 'undefined') {
+        document.getElementById('nav-login').style.display = 'none';
+        document.getElementById('nav-register').style.display = 'none';
+        document.getElementById('nav-logout').style.display = '';
+        var name = session.username || 'User';
+        document.querySelector('.header__tagline').textContent = 'Hi, ' + name;
+      }
+    })();
+
+    /* ── Logout ── */
+    document.getElementById('nav-logout').addEventListener('click', function(e) {
+      e.preventDefault();
+      clearSession();
+      showToast('Signed out.', 'success');
+      setTimeout(function() { window.location.href = CONFIG.ROUTES.LOGIN; }, 800);
+    });
+
+    /* ── Cookie Consent Banner ── */
+    (function initCookies() {
+      var banner     = document.getElementById('cookie-banner');
+      var btnAccept  = document.getElementById('btn-accept-cookies');
+      var btnDecline = document.getElementById('btn-decline-cookies');
+
+      if (!localStorage.getItem('cookieConsent')) {
+        setTimeout(function() { banner.classList.add('show'); }, 1000);
+      }
+
+      function handleConsent(choice) {
+        localStorage.setItem('cookieConsent', choice);
+        banner.classList.remove('show');
+
+        if (choice === 'accepted') {
+          /* Sync existing session to cookies */
+          var session = getSession();
+          if (session.userId) {
+            setCookie('Userid', session.userId);
+            setCookie('username', session.username);
+          }
+        } else {
+          /* Delete any cookies immediately */
+          document.cookie = 'Userid=; Max-Age=0; path=/';
+          document.cookie = 'username=; Max-Age=0; path=/';
+        }
+      }
+
+      btnAccept.addEventListener('click', function() { handleConsent('accepted'); });
+      btnDecline.addEventListener('click', function() { handleConsent('rejected'); });
+    })();
+
+    /* ── Lookup: Fetch button ── */
+    document.getElementById('btn-lookup').addEventListener('click', function() {
+      var code = document.getElementById('lookup-code').value.trim();
+      if (!code)              { showToast('Please enter a code number.', 'error'); return; }
+      if (isNaN(Number(code))) { showToast('Code must be a number.', 'error'); return; }
+
+      pendingLookupCode = code;
+
+      document.getElementById('modal-pass-input').value = '';
+      updatePassBtn();
+      openModal('modal-password');
+    });
+
+    document.getElementById('lookup-code').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('btn-lookup').click();
+    });
+
+    /* ── Password modal button label ── */
+    function updatePassBtn() {
+      var val = document.getElementById('modal-pass-input').value;
+      var btn = document.getElementById('btn-pass-submit');
+      btn.textContent = val.length > 0 ? 'Fetch With Password' : 'Fetch Without Password';
+    }
+    document.getElementById('modal-pass-input').addEventListener('input', updatePassBtn);
+
+    /* ── Password modal submit ── */
+    document.getElementById('btn-pass-submit').addEventListener('click', async function() {
+      var password = document.getElementById('modal-pass-input').value.trim();
+      var btn      = document.getElementById('btn-pass-submit');
+
+      setLoading(btn, true);
+
+      var url    = CONFIG.API.CODE(pendingLookupCode, password || null);
+      var result = await apiFetch(url, { method: 'GET' });
+
+      setLoading(btn, false);
+
+      if (!result.ok) {
+        var msg = result.data.Report || result.data.message || ('Error ' + result.status);
+        showToast(msg, 'error');
+        return;
+      }
+
+      var link = result.data.LINK || result.data.Link || result.data.link || result.data.url || '';
+      if (!link) {
+        showToast('Received response but no link found.', 'error');
+        return;
+      }
+
+      closeModal('modal-password');
+
+      document.getElementById('result-url').textContent = link;
+      document.getElementById('result-open').href       = link;
+      openModal('modal-result');
+    });
+
+    /* ── Copy button ── */
+    document.getElementById('btn-copy').addEventListener('click', function() {
+      var url = document.getElementById('result-url').textContent;
+      copyToClipboard(url, this);
+    });
+
+    /* ── Create Code ── */
+    document.getElementById('btn-create').addEventListener('click', async function() {
+      var session  = getSession();
+      var code     = document.getElementById('code').value.trim();
+      var link     = document.getElementById('link').value.trim();
+      var password = document.getElementById('password').value;
+      var btn      = document.getElementById('btn-create');
+
+      if (!code)               { showToast('Please enter a code number.', 'error'); return; }
+      if (isNaN(Number(code))) { showToast('Code must be a number.', 'error'); return; }
+      if (!link)               { showToast('Please enter a destination.', 'error'); return; }
+
+      setLoading(btn, true);
+
+      var payload = {
+        userid:   (session.userId && session.userId !== 'undefined') ? session.userId : -1,
+        code:     Number(code),
+        link:     link,
+        password: password || null,
+      };
+
+      var result = await apiFetch(CONFIG.API.MAIN, {
+        method: 'POST',
+        body:   JSON.stringify(payload),
+      });
+
+      setLoading(btn, false);
+
+      if (!result.ok) {
+        var msg = result.data.Report || result.data.message || ('Error ' + result.status);
+        showToast(msg, 'error');
+        return;
+      }
+
+      document.getElementById('code').value     = '';
+      document.getElementById('link').value     = '';
+      document.getElementById('password').value = '';
+      openModal('modal-created');
+    });
+  </script>
+</body>
+
+</html>

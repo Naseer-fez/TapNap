@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TapNap — Verify Code</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+  <!-- Logo — top-right on every page -->
+  <a href="/" class="logo-corner">
+    <img src="TCP.png" alt="TapNap Logo">
+    <span class="logo-corner__name">TapNap</span>
+  </a>
+
+  <main class="page">
+    <div class="card">
+      <p class="card__eyebrow">Verification</p>
+      <h1 class="card__title">Check your email.</h1>
+
+      <!-- Shows the email address the code was sent to -->
+      <div class="email-chip">
+        <span>📧</span>
+        <span id="email-label">your inbox</span>
+      </div>
+
+      <p class="card__sub" style="margin-top: -.6rem">
+        Enter the 4-digit code we sent to your address below.
+        The code expires in 10 minutes.
+      </p>
+
+      <!-- OTP input boxes -->
+      <div class="otp-row" role="group" aria-label="One-time code">
+        <input class="otp" type="number" id="pin-1" min="0" max="9" inputmode="numeric" placeholder="0" aria-label="Digit 1">
+        <input class="otp" type="number" id="pin-2" min="0" max="9" inputmode="numeric" placeholder="0" aria-label="Digit 2">
+        <input class="otp" type="number" id="pin-3" min="0" max="9" inputmode="numeric" placeholder="0" aria-label="Digit 3">
+        <input class="otp" type="number" id="pin-4" min="0" max="9" inputmode="numeric" placeholder="0" aria-label="Digit 4">
+      </div>
+
+      <button class="btn btn--primary" id="btn-submit">Verify Code</button>
+      <button class="btn btn--ghost"   id="btn-resend">Resend Code</button>
+      <button class="btn btn--ghost"   id="btn-back">← Back</button>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script>
+    /* ── Read email from URL param ── */
+    var params = new URLSearchParams(window.location.search);
+    var email  = params.get('message') || '';
+    if (email) {
+      document.getElementById('email-label').textContent = email;
+    }
+
+    /* ── OTP input handling ── */
+    var pins = Array.from(document.querySelectorAll('.otp'));
+
+    pins.forEach(function(pin, i) {
+      pin.addEventListener('input', function() {
+        /* Clamp to single digit */
+        if (pin.value.length > 1) pin.value = pin.value.slice(-1);
+        /* Remove out-of-range values */
+        if (pin.value < 0 || pin.value > 9) pin.value = '';
+
+        pin.classList.toggle('filled', pin.value !== '');
+
+        /* Auto-advance to next input */
+        if (pin.value !== '' && i < pins.length - 1) {
+          pins[i + 1].focus();
+        }
+
+        /* Auto-submit when all four digits filled */
+        if (pins.every(function(p) { return p.value !== ''; })) {
+          setTimeout(function() {
+            document.getElementById('btn-submit').click();
+          }, 120);
+        }
+      });
+
+      pin.addEventListener('keydown', function(e) {
+        /* Backspace jumps to previous */
+        if (e.key === 'Backspace' && !pin.value && i > 0) {
+          pins[i - 1].focus();
+          pins[i - 1].value = '';
+          pins[i - 1].classList.remove('filled');
+        }
+        /* Left/Right arrow navigation */
+        if (e.key === 'ArrowLeft'  && i > 0)              pins[i - 1].focus();
+        if (e.key === 'ArrowRight' && i < pins.length - 1) pins[i + 1].focus();
+      });
+
+      /* Handle paste: distribute digits across boxes */
+      pin.addEventListener('paste', function(e) {
+        e.preventDefault();
+        var pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+        pasted.split('').slice(0, 4).forEach(function(digit, idx) {
+          if (pins[idx]) {
+            pins[idx].value = digit;
+            pins[idx].classList.add('filled');
+          }
+        });
+        /* Focus the first empty box after paste */
+        var nextEmpty = pins.find(function(p) { return p.value === ''; });
+        if (nextEmpty) nextEmpty.focus();
+        else pins[pins.length - 1].focus();
+      });
+    });
+
+    /* Auto-focus first input on load */
+    pins[0].focus();
+
+    /* ── Navigation ── */
+    document.getElementById('btn-back').addEventListener('click', function() {
+      window.location.href = CONFIG.ROUTES.FORGOT;
+    });
+
+    /* ── Resend ── */
+    var resendCooldown = false;
+    document.getElementById('btn-resend').addEventListener('click', async function() {
+      if (resendCooldown) { showToast('Please wait before requesting another code.', 'info'); return; }
+      if (!email)         { showToast('No email address found. Please go back.'); return; }
+
+      var btn = document.getElementById('btn-resend');
+      setLoading(btn, true);
+      var result = await apiFetch(CONFIG.API.FORGOT(email), { method: 'POST' });
+      setLoading(btn, false);
+
+      if (!result.ok) { showToast(result.data.Report || ('Error ' + result.status)); return; }
+
+      showToast('New code sent!', 'success');
+
+      /* 30-second resend cooldown */
+      resendCooldown = true;
+      var countdown  = 30;
+      var orig       = btn.dataset.originalText || 'Resend Code';
+      var interval   = setInterval(function() {
+        countdown--;
+        btn.textContent = 'Resend in ' + countdown + 's';
+        btn.disabled    = true;
+        if (countdown <= 0) {
+          clearInterval(interval);
+          btn.textContent = orig;
+          btn.disabled    = false;
+          resendCooldown  = false;
+        }
+      }, 1000);
+    });
+
+    /* ── Verify ── */
+    document.getElementById('btn-submit').addEventListener('click', async function() {
+      var code = pins.map(function(p) { return p.value; }).join('');
+      var btn  = document.getElementById('btn-submit');
+
+      if (code.length < 4 || code.includes('')) {
+        showToast('Please enter all 4 digits.');
+        return;
+      }
+
+      setLoading(btn, true);
+      var result = await apiFetch(CONFIG.API.FORGOT(email), {
+        method:  'GET',
+        headers: { 'X-OTP-Code': code },
+      });
+      setLoading(btn, false);
+
+      if (!result.ok) {
+        showToast(result.data.Report || ('Error ' + result.status));
+        /* Clear and re-focus on failure */
+        pins.forEach(function(p) { p.value = ''; p.classList.remove('filled'); });
+        pins[0].focus();
+        return;
+      }
+
+      showToast('Verified! Redirecting…', 'success');
+      setTimeout(function() { window.location.replace(CONFIG.ROUTES.LOGIN); }, 900);
+    });
+  </script>
+</body>
+</html>
