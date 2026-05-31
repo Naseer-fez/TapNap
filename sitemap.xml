@@ -6,12 +6,12 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://tapnap.qzz.io/Login.html</loc>
+    <loc>https://tapnap.qzz.io/login</loc>
     <lastmod>2026-05-31</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://tapnap.qzz.io/Register.html</loc>
+    <loc>https://tapnap.qzz.io/register</loc>
     <lastmod>2026-05-31</lastmod>
     <priority>0.8</priority>
   </url>
